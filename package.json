@@ -1,0 +1,18 @@
+{
+  "name": "flash-buddy",
+  "version": "1.0.0",
+  "description": "Elm PWA for helping flash exposure calculations",
+  "main": "index.js",
+  "author": "Juhamatti Niemelä <iiska@iki.fi>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "create-elm-app": "^4.1.2",
+    "eslint": "^6.7.2"
+  },
+  "scripts": {
+    "start": "elm-app start",
+    "build": "elm-app build",
+    "test": "elm-app test"
+  }
+}
