@@ -188,7 +188,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h1 [] [ text "Flash buddy" ]
+        [ h1 [] [ text "📸 Flash Buddy" ]
         , viewFlashSelect model
         , viewFlashPowerSelect model
         , viewISOSelect model
