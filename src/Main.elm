@@ -91,6 +91,25 @@ getSelectedFlash model =
             )
 
 
+roundToHalves : Float -> Float
+roundToHalves val =
+    let
+        down =
+            toFloat <| floor val
+
+        half =
+            toFloat (floor val) + 0.5
+
+        up =
+            toFloat (floor val) + 1.0
+    in
+    [ ( abs (val - down), down ), ( abs (val - half), half ), ( abs (val - up), up ) ]
+        |> List.sortBy (\( diff, _ ) -> diff)
+        |> List.head
+        |> Maybe.map (\( _, ret ) -> ret)
+        |> Maybe.withDefault down
+
+
 
 ---- UPDATE ----
 
@@ -309,6 +328,7 @@ viewResults model =
 
         distanceCell row iso aperture col gn =
             distance iso (Aperture aperture) model.selectedFlashPower gn
+                |> roundToHalves
                 |> Round.round 1
                 |> text
                 |> List.singleton
