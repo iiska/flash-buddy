@@ -247,7 +247,7 @@ viewResults model =
                 ]
                 [ text <| String.fromFloat aperture ]
 
-        distanceCell row aperture col gn =
+        distanceCell row iso aperture col gn =
             gn
                 |> guideNumber
                 |> (\n -> n / aperture)
