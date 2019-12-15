@@ -1,0 +1,52 @@
+name: Test, build and deploy
+
+# This workflow will run on master branch and on any pull requests targeting master
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - run: yarn install
+
+      - name: Test
+        run: |
+          yarn test
+
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - run: yarn install
+
+      - name: Build
+        run: |
+          yarn build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_BRANCH: gh-pages
+          PUBLISH_DIR: ./build

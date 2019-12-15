@@ -1,0 +1,43 @@
+name: Test and build
+
+# This workflow will run on master branch and on any pull requests targeting master
+on:
+  pull_request:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - run: yarn install
+
+      - name: Test
+        run: |
+          yarn test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - run: yarn install
+
+      - name: Build
+        run: |
+          yarn build

@@ -15,6 +15,7 @@ body {
   margin: 0;
   text-align: center;
   color: #293c4b;
+  margin: 0 auto;
 }
 
 h1 {
@@ -27,12 +28,13 @@ img {
 }
 
 table {
+  margin: 2em auto;
   border-collapse: collapse;
 }
 
 th,
 td {
-  padding: 0.25em;
+  padding: 0.4em;
 }
 
 .row-selected,

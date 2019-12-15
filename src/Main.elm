@@ -31,6 +31,10 @@ type GuideNumber
     = GuideNumber Float
 
 
+type FlashPowerAttenuation
+    = FlashPowerAttenuation Int
+
+
 type alias Flash =
     { name : String
     , guideNumbers : Dict FocalLength GuideNumber
@@ -43,6 +47,7 @@ type alias Model =
     , selectedISO : ISO
     , selectedRow : Maybe Int
     , selectedCol : Maybe Int
+    , selectedFlashPower : FlashPowerAttenuation
     }
 
 
@@ -69,6 +74,7 @@ init =
       , selectedISO = ISO 100
       , selectedRow = Nothing
       , selectedCol = Nothing
+      , selectedFlashPower = FlashPowerAttenuation 1
       }
     , Cmd.none
     )
@@ -85,6 +91,25 @@ getSelectedFlash model =
             )
 
 
+roundToHalves : Float -> Float
+roundToHalves val =
+    let
+        down =
+            toFloat <| floor val
+
+        half =
+            toFloat (floor val) + 0.5
+
+        up =
+            toFloat (floor val) + 1.0
+    in
+    [ ( abs (val - down), down ), ( abs (val - half), half ), ( abs (val - up), up ) ]
+        |> List.sortBy (\( diff, _ ) -> diff)
+        |> List.head
+        |> Maybe.map (\( _, ret ) -> ret)
+        |> Maybe.withDefault down
+
+
 
 ---- UPDATE ----
 
@@ -92,6 +117,7 @@ getSelectedFlash model =
 type Msg
     = SelectFlash String
     | SelectISO String
+    | SelectPower String
     | ToggleRow Int
     | ToggleCol Int
     | ToggleCell Int Int
@@ -126,6 +152,16 @@ update msg model =
             , Cmd.none
             )
 
+        SelectPower p ->
+            ( { model
+                | selectedFlashPower =
+                    String.toInt p
+                        |> Maybe.map FlashPowerAttenuation
+                        |> Maybe.withDefault (FlashPowerAttenuation 1)
+              }
+            , Cmd.none
+            )
+
         ToggleRow n ->
             ( { model
                 | selectedRow = toggle model.selectedRow n
@@ -152,8 +188,9 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h1 [] [ text "Flash buddy" ]
+        [ h1 [] [ text "📸 Flash Buddy" ]
         , viewFlashSelect model
+        , viewFlashPowerSelect model
         , viewISOSelect model
         , viewResults model
         ]
@@ -176,6 +213,36 @@ viewFlashSelect { flashes, selectedFlash } =
                             )
                         ]
                         [ text flash.name ]
+                )
+        )
+
+
+viewFlashPowerSelect :
+    { m | selectedFlashPower : FlashPowerAttenuation }
+    -> Html Msg
+viewFlashPowerSelect { selectedFlashPower } =
+    let
+        powerAsInt (FlashPowerAttenuation n) =
+            n
+
+        values =
+            [ ( 1, "Full" )
+            , ( 2, "1/2" )
+            , ( 4, "1/4" )
+            , ( 8, "1/8" )
+            , ( 16, "1/16" )
+            , ( 32, "1/32" )
+            ]
+    in
+    Html.select [ onInput SelectPower ]
+        (values
+            |> List.map
+                (\( val, label ) ->
+                    Html.option
+                        [ value <| String.fromInt val
+                        , selected <| val == powerAsInt selectedFlashPower
+                        ]
+                        [ text label ]
                 )
         )
 
@@ -216,6 +283,18 @@ maybeEquals maybeA a =
     maybeA |> Maybe.map ((==) a) |> Maybe.withDefault False
 
 
+distance : ISO -> Aperture -> FlashPowerAttenuation -> GuideNumber -> Float
+distance (ISO iso) (Aperture aperture) (FlashPowerAttenuation fp) (GuideNumber gn) =
+    let
+        isoFactor =
+            sqrt 2 ^ logBase 2 (toFloat iso / 100.0)
+
+        fpFactor =
+            1 / (sqrt 2 ^ logBase 2 (toFloat fp))
+    in
+    gn / aperture * isoFactor * fpFactor
+
+
 viewResults : Model -> Html Msg
 viewResults model =
     let
@@ -247,10 +326,9 @@ viewResults model =
                 ]
                 [ text <| String.fromFloat aperture ]
 
-        distanceCell row aperture col gn =
-            gn
-                |> guideNumber
-                |> (\n -> n / aperture)
+        distanceCell row iso aperture col gn =
+            distance iso (Aperture aperture) model.selectedFlashPower gn
+                |> roundToHalves
                 |> Round.round 1
                 |> text
                 |> List.singleton
@@ -266,7 +344,11 @@ viewResults model =
             Html.tr []
                 (apertureLabel index aperture
                     :: (Dict.values flash.guideNumbers
-                            |> List.indexedMap (distanceCell index aperture)
+                            |> List.indexedMap
+                                (distanceCell index
+                                    model.selectedISO
+                                    aperture
+                                )
                        )
                 )
     in
