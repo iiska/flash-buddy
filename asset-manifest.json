@@ -1,15 +1,15 @@
 {
-  "main.css": "/static/css/main.4b12ad07.chunk.css",
-  "main.js": "/static/js/main.b7e4fe11.chunk.js",
-  "main.js.map": "/static/js/main.b7e4fe11.chunk.js.map",
-  "runtime~main.js": "/static/js/runtime~main.1b922744.js",
-  "runtime~main.js.map": "/static/js/runtime~main.1b922744.js.map",
-  "vendors~main.js": "/static/js/vendors~main.3ca81432.chunk.js",
-  "vendors~main.js.map": "/static/js/vendors~main.3ca81432.chunk.js.map",
-  "./service-worker.js": "/./service-worker.js",
-  "favicon.ico": "/favicon.ico",
-  "index.html": "/index.html",
-  "logo.svg": "/logo.svg",
-  "manifest.json": "/manifest.json",
-  "precache-manifest.4241659372554b94378cecee6e4aff91.js": "/precache-manifest.4241659372554b94378cecee6e4aff91.js"
+  "main.css": "/flash-buddy/static/css/main.4b12ad07.chunk.css",
+  "main.js": "/flash-buddy/static/js/main.87c1aab7.chunk.js",
+  "main.js.map": "/flash-buddy/static/js/main.87c1aab7.chunk.js.map",
+  "runtime~main.js": "/flash-buddy/static/js/runtime~main.2366afd0.js",
+  "runtime~main.js.map": "/flash-buddy/static/js/runtime~main.2366afd0.js.map",
+  "vendors~main.js": "/flash-buddy/static/js/vendors~main.3ca81432.chunk.js",
+  "vendors~main.js.map": "/flash-buddy/static/js/vendors~main.3ca81432.chunk.js.map",
+  "./service-worker.js": "/flash-buddy/./service-worker.js",
+  "favicon.ico": "/flash-buddy/favicon.ico",
+  "index.html": "/flash-buddy/index.html",
+  "logo.svg": "/flash-buddy/logo.svg",
+  "manifest.json": "/flash-buddy/manifest.json",
+  "precache-manifest.675860e14bfe898eb269df58697c3cd9.js": "/flash-buddy/precache-manifest.675860e14bfe898eb269df58697c3cd9.js"
 }
