@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (classList, selected, src, value)
+import Html.Attributes exposing (class, classList, selected, src, value)
 import Html.Events exposing (onClick, onInput)
 import List
 import Round
@@ -187,7 +187,7 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div [ class "app-container" ]
         [ h1 [] [ text "📸 Flash Buddy" ]
         , viewFlashSelect model
         , viewFlashPowerSelect model
@@ -196,25 +196,32 @@ view model =
         ]
 
 
+formComponent : String -> List (Html Msg) -> Html Msg
+formComponent label children =
+    Html.label [] (Html.span [ class "form-label" ] [ text label ] :: children)
+
+
 viewFlashSelect :
     { m | flashes : List Flash, selectedFlash : Maybe String }
     -> Html Msg
 viewFlashSelect { flashes, selectedFlash } =
-    Html.select [ onInput SelectFlash ]
-        (flashes
-            |> List.map
-                (\flash ->
-                    Html.option
-                        [ value flash.name
-                        , selected <|
-                            (selectedFlash
-                                |> Maybe.map ((==) flash.name)
-                                |> Maybe.withDefault False
-                            )
-                        ]
-                        [ text flash.name ]
-                )
-        )
+    formComponent "Flash"
+        [ Html.select [ onInput SelectFlash ]
+            (flashes
+                |> List.map
+                    (\flash ->
+                        Html.option
+                            [ value flash.name
+                            , selected <|
+                                (selectedFlash
+                                    |> Maybe.map ((==) flash.name)
+                                    |> Maybe.withDefault False
+                                )
+                            ]
+                            [ text flash.name ]
+                    )
+            )
+        ]
 
 
 viewFlashPowerSelect :
@@ -234,17 +241,19 @@ viewFlashPowerSelect { selectedFlashPower } =
             , ( 32, "1/32" )
             ]
     in
-    Html.select [ onInput SelectPower ]
-        (values
-            |> List.map
-                (\( val, label ) ->
-                    Html.option
-                        [ value <| String.fromInt val
-                        , selected <| val == powerAsInt selectedFlashPower
-                        ]
-                        [ text label ]
-                )
-        )
+    formComponent "Flash power"
+        [ Html.select [ onInput SelectPower ]
+            (values
+                |> List.map
+                    (\( val, label ) ->
+                        Html.option
+                            [ value <| String.fromInt val
+                            , selected <| val == powerAsInt selectedFlashPower
+                            ]
+                            [ text label ]
+                    )
+            )
+        ]
 
 
 viewISOSelect : { m | selectedISO : ISO } -> Html Msg
@@ -256,17 +265,19 @@ viewISOSelect { selectedISO } =
         unwrap (ISO n) =
             n
     in
-    Html.select [ onInput SelectISO ]
-        (values
-            |> List.map
-                (\iso ->
-                    Html.option
-                        [ value <| String.fromInt iso
-                        , selected <| iso == unwrap selectedISO
-                        ]
-                        [ text <| String.fromInt iso ]
-                )
-        )
+    formComponent "ISO"
+        [ Html.select [ onInput SelectISO ]
+            (values
+                |> List.map
+                    (\iso ->
+                        Html.option
+                            [ value <| String.fromInt iso
+                            , selected <| iso == unwrap selectedISO
+                            ]
+                            [ text <| String.fromInt iso ]
+                    )
+            )
+        ]
 
 
 apertures =
