@@ -1,54 +1,19 @@
-module Main exposing (..)
+module Main exposing (main, roundToHalves)
 
 import Browser
-import Dict exposing (Dict)
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (class, classList, selected, src, value)
+import Dict
+import Html exposing (Html, div, h1, text)
+import Html.Attributes exposing (class, classList, selected, value)
 import Html.Events exposing (onClick, onInput)
+import Json.Encode as E
 import List
+import Model exposing (Aperture(..), Flash, FlashPowerAttenuation(..), GuideNumber(..), ISO(..))
+import Ports
 import Round
 
 
-
----- MODEL ----
--- Distance * Aperture = Guide Number
---
-
-
-type ISO
-    = ISO Int
-
-
-type alias FocalLength =
-    Int
-
-
-type Aperture
-    = Aperture Float
-
-
-type GuideNumber
-    = GuideNumber Float
-
-
-type FlashPowerAttenuation
-    = FlashPowerAttenuation Int
-
-
-type alias Flash =
-    { name : String
-    , guideNumbers : Dict FocalLength GuideNumber
-    }
-
-
 type alias Model =
-    { flashes : List Flash
-    , selectedFlash : Maybe String
-    , selectedISO : ISO
-    , selectedRow : Maybe Int
-    , selectedCol : Maybe Int
-    , selectedFlashPower : FlashPowerAttenuation
-    }
+    Model.Model
 
 
 init : ( Model, Cmd Msg )
@@ -58,13 +23,13 @@ init =
             [ { name = "Nissin 622 Mark 2."
               , guideNumbers =
                     Dict.fromList
-                        [ ( 24, GuideNumber 25 )
-                        , ( 28, GuideNumber 28 )
-                        , ( 35, GuideNumber 32 )
-                        , ( 50, GuideNumber 35 )
-                        , ( 70, GuideNumber 38 )
-                        , ( 85, GuideNumber 41 )
-                        , ( 105, GuideNumber 44 )
+                        [ ( "24", GuideNumber 25 )
+                        , ( "28", GuideNumber 28 )
+                        , ( "35", GuideNumber 32 )
+                        , ( "50", GuideNumber 35 )
+                        , ( "70", GuideNumber 38 )
+                        , ( "85", GuideNumber 41 )
+                        , ( "105", GuideNumber 44 )
                         ]
               }
             ]
@@ -78,17 +43,6 @@ init =
       }
     , Cmd.none
     )
-
-
-getSelectedFlash : Model -> Maybe Flash
-getSelectedFlash model =
-    model.selectedFlash
-        |> Maybe.andThen
-            (\selected ->
-                model.flashes
-                    |> List.filter (\f -> f.name == selected)
-                    |> List.head
-            )
 
 
 roundToHalves : Float -> Float
@@ -121,6 +75,7 @@ type Msg
     | ToggleRow Int
     | ToggleCol Int
     | ToggleCell Int Int
+    | StateRestored E.Value
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -138,7 +93,7 @@ update msg model =
                 Nothing ->
                     Just newInt
     in
-    case msg of
+    (case msg of
         SelectFlash name ->
             ( { model | selectedFlash = Just name }, Cmd.none )
 
@@ -179,6 +134,20 @@ update msg model =
               }
             , Cmd.none
             )
+
+        StateRestored json ->
+            ( Model.decode json |> Result.withDefault model, Cmd.none )
+    )
+        |> (\( newModel, newCmd ) ->
+                ( newModel
+                , Cmd.batch
+                    [ newCmd
+                    , newModel
+                        |> Model.encode
+                        |> Ports.storeStateCache
+                    ]
+                )
+           )
 
 
 
@@ -280,6 +249,7 @@ viewISOSelect { selectedISO } =
         ]
 
 
+apertures : List Float
 apertures =
     [ 1.4, 2.0, 2.8, 4, 5.6, 8, 11, 16, 22 ]
 
@@ -322,7 +292,7 @@ viewResults model =
                                           )
                                         ]
                                     ]
-                                    [ text <| String.fromInt focal ]
+                                    [ text focal ]
                             )
                    )
 
@@ -363,7 +333,7 @@ viewResults model =
                        )
                 )
     in
-    getSelectedFlash model
+    Model.getSelectedFlash model
         |> Maybe.map
             (\flash ->
                 Html.table []
@@ -386,5 +356,5 @@ main =
         { view = view
         , init = \_ -> init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = always (Ports.restoredStateCache StateRestored)
         }
