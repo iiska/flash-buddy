@@ -43,13 +43,15 @@ if (storageAvailable("localStorage")) {
 
   try {
     const cached = localStorage.getItem(stateCacheKey);
-    if (cached) {
-      app.ports.restoredStateCache.send(JSON.parse(cached));
-    }
+    const data = cached ? JSON.parse(cached) : { localStorage: "available" };
+    console.log(data);
+    app.ports.restoredStateCache.send(data);
   } catch (e) {
     console.warn(`Encountered: ${e}, clearing local cache`);
     localStorage.removeItem(stateCacheKey);
   }
+} else {
+  app.ports.restoredStateCache.send({ localStorage: "not_available" });
 }
 
 // If you want your app to work offline and load faster, you can change

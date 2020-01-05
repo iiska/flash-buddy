@@ -9,6 +9,11 @@
   height: inherit;
 }
 
+:root {
+  --info-bg: #aaaaff;
+  --info-fg: #333366;
+}
+
 body {
   font-family: "Source Sans Pro", "Trebuchet MS", "Lucida Grande",
     "Bitstream Vera Sans", "Helvetica Neue", sans-serif;
@@ -70,4 +75,14 @@ td {
 
 .row-selected.col-selected {
   background: #aaa;
+}
+
+.notification,
+.notification--info {
+  list-style-type: none;
+}
+
+.notification--info {
+  background: var(--info-bg);
+  color: var(--info-fg);
 }

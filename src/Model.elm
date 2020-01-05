@@ -31,6 +31,12 @@ type alias Flash =
     }
 
 
+type LocalStorageStatus
+    = NotAvailable
+    | Available
+    | InUse
+
+
 type alias Model =
     { flashes : List Flash
     , selectedFlash : Maybe String
@@ -38,6 +44,7 @@ type alias Model =
     , selectedRow : Maybe Int
     , selectedCol : Maybe Int
     , selectedFlashPower : FlashPowerAttenuation
+    , localStorage : LocalStorageStatus
     }
 
 
@@ -84,6 +91,17 @@ encode model =
                 |> unwrapFlashPowerAttenuation
                 |> E.int
           )
+        , ( "localStorage"
+          , case model.localStorage of
+                NotAvailable ->
+                    E.string "not_available"
+
+                Available ->
+                    E.string "available"
+
+                InUse ->
+                    E.string "in_use"
+          )
         ]
 
 
@@ -103,23 +121,43 @@ encodeFlash flash =
         ]
 
 
-decode : E.Value -> Result D.Error Model
-decode json =
-    D.decodeValue decoder json
+decode : Model -> E.Value -> Model
+decode defaults json =
+    D.decodeValue (decoder defaults) json |> Result.withDefault defaults
 
 
-decoder : Decoder Model
-decoder =
-    D.map6 Model
-        (D.field "flashes" (D.list flashDecoder))
-        (D.field "selectedFlash" (D.maybe D.string))
-        (D.field "selectedISO" (D.int |> D.map ISO))
-        (D.field "selectedRow" (D.maybe D.int))
-        (D.field "selectedCol" (D.maybe D.int))
-        (D.field "selectedFlashPowerAttenuation"
-            (D.int
-                |> D.map FlashPowerAttenuation
+decoder : Model -> Decoder Model
+decoder defaults =
+    D.map7 Model
+        (D.maybe (D.field "flashes" (D.list flashDecoder))
+            |> D.map (Maybe.withDefault defaults.flashes)
+        )
+        (D.maybe (D.field "selectedFlash" (D.maybe D.string))
+            |> D.map (Maybe.withDefault defaults.selectedFlash)
+        )
+        (D.maybe
+            (D.field "selectedISO" (D.int |> D.map ISO))
+            |> D.map (Maybe.withDefault defaults.selectedISO)
+        )
+        (D.maybe
+            (D.field "selectedRow" (D.maybe D.int))
+            |> D.map (Maybe.withDefault defaults.selectedRow)
+        )
+        (D.maybe
+            (D.field "selectedCol" (D.maybe D.int))
+            |> D.map (Maybe.withDefault defaults.selectedCol)
+        )
+        (D.maybe
+            (D.field "selectedFlashPowerAttenuation"
+                (D.int
+                    |> D.map FlashPowerAttenuation
+                )
             )
+            |> D.map (Maybe.withDefault defaults.selectedFlashPower)
+        )
+        (D.maybe
+            (D.field "localStorage" localStorageStatusDecoder)
+            |> D.map (Maybe.withDefault defaults.localStorage)
         )
 
 
@@ -130,3 +168,19 @@ flashDecoder =
         (D.field "guideNumbers"
             (D.dict (D.float |> D.map GuideNumber))
         )
+
+
+localStorageStatusDecoder : Decoder LocalStorageStatus
+localStorageStatusDecoder =
+    D.string
+        |> D.map
+            (\value ->
+                if value == "in_use" then
+                    InUse
+
+                else if value == "not_available" then
+                    NotAvailable
+
+                else
+                    Available
+            )

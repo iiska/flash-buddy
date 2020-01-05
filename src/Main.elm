@@ -2,7 +2,7 @@ module Main exposing (main, roundToHalves)
 
 import Browser
 import Dict
-import Html exposing (Html, div, h1, text)
+import Html exposing (Html, div, h1, header, text)
 import Html.Attributes exposing (class, classList, selected, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Encode as E
@@ -40,6 +40,7 @@ init =
       , selectedRow = Nothing
       , selectedCol = Nothing
       , selectedFlashPower = FlashPowerAttenuation 1
+      , localStorage = Model.NotAvailable
       }
     , Cmd.none
     )
@@ -68,6 +69,10 @@ roundToHalves val =
 ---- UPDATE ----
 
 
+type NotificationAction
+    = LocalStorageConsent
+
+
 type Msg
     = SelectFlash String
     | SelectISO String
@@ -76,6 +81,8 @@ type Msg
     | ToggleCol Int
     | ToggleCell Int Int
     | StateRestored E.Value
+    | RejectLocalStorage
+    | AcceptLocalStorage
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -135,19 +142,32 @@ update msg model =
             , Cmd.none
             )
 
+        RejectLocalStorage ->
+            ( { model | localStorage = Model.NotAvailable }, Cmd.none )
+
+        AcceptLocalStorage ->
+            ( { model | localStorage = Model.InUse }, Cmd.none )
+
         StateRestored json ->
-            ( Model.decode json |> Result.withDefault model, Cmd.none )
+            ( Model.decode model json, Cmd.none )
     )
-        |> (\( newModel, newCmd ) ->
-                ( newModel
-                , Cmd.batch
-                    [ newCmd
-                    , newModel
-                        |> Model.encode
-                        |> Ports.storeStateCache
-                    ]
-                )
-           )
+        |> cacheState
+
+
+cacheState : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+cacheState ( newModel, newCmd ) =
+    if newModel.localStorage == Model.InUse then
+        ( newModel
+        , Cmd.batch
+            [ newCmd
+            , newModel
+                |> Model.encode
+                |> Ports.storeStateCache
+            ]
+        )
+
+    else
+        ( newModel, newCmd )
 
 
 
@@ -157,7 +177,10 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div [ class "app-container" ]
-        [ h1 [] [ text "📸 Flash Buddy" ]
+        [ header []
+            [ viewNotifications model
+            , h1 [] [ text "📸 Flash Buddy" ]
+            ]
         , viewFlashSelect model
         , viewFlashPowerSelect model
         , viewISOSelect model
@@ -254,11 +277,6 @@ apertures =
     [ 1.4, 2.0, 2.8, 4, 5.6, 8, 11, 16, 22 ]
 
 
-guideNumber : GuideNumber -> Float
-guideNumber (GuideNumber gn) =
-    gn
-
-
 maybeEquals : Maybe a -> a -> Bool
 maybeEquals maybeA a =
     maybeA |> Maybe.map ((==) a) |> Maybe.withDefault False
@@ -344,6 +362,43 @@ viewResults model =
                     )
             )
         |> Maybe.withDefault (text "")
+
+
+type alias Notification =
+    { title : String
+    , onReject : Msg
+    , onAccept : Msg
+    }
+
+
+viewNotifications : Model -> Html Msg
+viewNotifications model =
+    let
+        maybeLocalStoreConsent =
+            if model.localStorage == Model.Available then
+                Just (Notification "Use browser local storage to save Flash Buddy data?" RejectLocalStorage AcceptLocalStorage)
+
+            else
+                Nothing
+
+        notifications =
+            [ maybeLocalStoreConsent ] |> List.filterMap identity
+    in
+    if List.length notifications == 0 then
+        text ""
+
+    else
+        Html.ul []
+            (notifications
+                |> List.map
+                    (\n ->
+                        Html.li [ class "notification--info" ]
+                            [ text n.title
+                            , Html.button [ onClick n.onReject ] [ text "Reject" ]
+                            , Html.button [ onClick n.onAccept ] [ text "Accept" ]
+                            ]
+                    )
+            )
 
 
 
