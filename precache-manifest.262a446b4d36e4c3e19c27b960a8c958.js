@@ -4,7 +4,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/flash-buddy/favicon.ico"
   },
   {
-    "revision": "d9b25ea4101181872e25f61b3bc683c9",
+    "revision": "6aba28e55c42a52f2fec17f1ccffc10c",
     "url": "/flash-buddy/index.html"
   },
   {
@@ -16,12 +16,12 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/flash-buddy/manifest.json"
   },
   {
-    "revision": "55493d85d8a40e8af787",
-    "url": "/flash-buddy/static/css/main.4b12ad07.chunk.css"
+    "revision": "ed84c2b9ed2ca562cdbe",
+    "url": "/flash-buddy/static/css/main.cc3fff16.chunk.css"
   },
   {
-    "revision": "55493d85d8a40e8af787",
-    "url": "/flash-buddy/static/js/main.55493d85.chunk.js"
+    "revision": "ed84c2b9ed2ca562cdbe",
+    "url": "/flash-buddy/static/js/main.ed84c2b9.chunk.js"
   },
   {
     "revision": "2366afd0d620fcf8edfc",

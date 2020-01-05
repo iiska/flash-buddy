@@ -1,7 +1,7 @@
 {
-  "main.css": "/flash-buddy/static/css/main.4b12ad07.chunk.css",
-  "main.js": "/flash-buddy/static/js/main.55493d85.chunk.js",
-  "main.js.map": "/flash-buddy/static/js/main.55493d85.chunk.js.map",
+  "main.css": "/flash-buddy/static/css/main.cc3fff16.chunk.css",
+  "main.js": "/flash-buddy/static/js/main.ed84c2b9.chunk.js",
+  "main.js.map": "/flash-buddy/static/js/main.ed84c2b9.chunk.js.map",
   "runtime~main.js": "/flash-buddy/static/js/runtime~main.2366afd0.js",
   "runtime~main.js.map": "/flash-buddy/static/js/runtime~main.2366afd0.js.map",
   "vendors~main.js": "/flash-buddy/static/js/vendors~main.3ca81432.chunk.js",
@@ -11,5 +11,5 @@
   "index.html": "/flash-buddy/index.html",
   "logo.svg": "/flash-buddy/logo.svg",
   "manifest.json": "/flash-buddy/manifest.json",
-  "precache-manifest.1d2afe48aa2b380fffee696af7ccadaf.js": "/flash-buddy/precache-manifest.1d2afe48aa2b380fffee696af7ccadaf.js"
+  "precache-manifest.262a446b4d36e4c3e19c27b960a8c958.js": "/flash-buddy/precache-manifest.262a446b4d36e4c3e19c27b960a8c958.js"
 }
