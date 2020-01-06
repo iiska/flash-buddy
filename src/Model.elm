@@ -37,6 +37,12 @@ type LocalStorageStatus
     | InUse
 
 
+type ServiceWorkerStatus
+    = UpdateAvailable
+    | UpgradeLater
+    | Latest
+
+
 type alias Model =
     { flashes : List Flash
     , selectedFlash : Maybe String
@@ -45,6 +51,7 @@ type alias Model =
     , selectedCol : Maybe Int
     , selectedFlashPower : FlashPowerAttenuation
     , localStorage : LocalStorageStatus
+    , serviceWorker : ServiceWorkerStatus
     }
 
 
@@ -102,6 +109,17 @@ encode model =
                 InUse ->
                     E.string "in_use"
           )
+        , ( "serviceWorker"
+          , case model.serviceWorker of
+                UpdateAvailable ->
+                    E.string "update_available"
+
+                Latest ->
+                    E.string "latest"
+
+                UpgradeLater ->
+                    E.string "upgrade_later"
+          )
         ]
 
 
@@ -128,7 +146,7 @@ decode defaults json =
 
 decoder : Model -> Decoder Model
 decoder defaults =
-    D.map7 Model
+    D.map8 Model
         (D.maybe (D.field "flashes" (D.list flashDecoder))
             |> D.map (Maybe.withDefault defaults.flashes)
         )
@@ -159,6 +177,10 @@ decoder defaults =
             (D.field "localStorage" localStorageStatusDecoder)
             |> D.map (Maybe.withDefault defaults.localStorage)
         )
+        (D.maybe
+            (D.field "serviceWorker" serviceWorkerStatusDecoder)
+            |> D.map (Maybe.withDefault defaults.serviceWorker)
+        )
 
 
 flashDecoder : Decoder Flash
@@ -183,4 +205,20 @@ localStorageStatusDecoder =
 
                 else
                     Available
+            )
+
+
+serviceWorkerStatusDecoder : Decoder ServiceWorkerStatus
+serviceWorkerStatusDecoder =
+    D.string
+        |> D.map
+            (\value ->
+                if value == "update_available" then
+                    UpdateAvailable
+
+                else if value == "upgrade_later" then
+                    UpgradeLater
+
+                else
+                    Latest
             )
