@@ -1,6 +1,7 @@
 module Main exposing (main, roundToHalves)
 
 import Browser
+import Browser.Navigation
 import Dict
 import Html exposing (Html, div, h1, header, text)
 import Html.Attributes exposing (class, classList, selected, value)
@@ -41,6 +42,7 @@ init =
       , selectedCol = Nothing
       , selectedFlashPower = FlashPowerAttenuation 1
       , localStorage = Model.NotAvailable
+      , serviceWorker = Model.Latest
       }
     , Cmd.none
     )
@@ -69,10 +71,6 @@ roundToHalves val =
 ---- UPDATE ----
 
 
-type NotificationAction
-    = LocalStorageConsent
-
-
 type Msg
     = SelectFlash String
     | SelectISO String
@@ -83,6 +81,8 @@ type Msg
     | StateRestored E.Value
     | RejectLocalStorage
     | AcceptLocalStorage
+    | RejectServiceWorkerUpdate
+    | AcceptServiceWorkerUpdate
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -148,8 +148,18 @@ update msg model =
         AcceptLocalStorage ->
             ( { model | localStorage = Model.InUse }, Cmd.none )
 
+        RejectServiceWorkerUpdate ->
+            ( { model | serviceWorker = Model.UpgradeLater }, Cmd.none )
+
+        AcceptServiceWorkerUpdate ->
+            ( { model | serviceWorker = Model.Latest }
+            , Browser.Navigation.reloadAndSkipCache
+            )
+
         StateRestored json ->
-            ( Model.decode model json, Cmd.none )
+            ( Model.decode model json
+            , Cmd.none
+            )
     )
         |> cacheState
 
@@ -366,6 +376,8 @@ viewResults model =
 
 type alias Notification =
     { title : String
+    , rejectLabel : Maybe String
+    , acceptLabel : Maybe String
     , onReject : Msg
     , onAccept : Msg
     }
@@ -376,13 +388,33 @@ viewNotifications model =
     let
         maybeLocalStoreConsent =
             if model.localStorage == Model.Available then
-                Just (Notification "Use browser local storage to save Flash Buddy data?" RejectLocalStorage AcceptLocalStorage)
+                Just
+                    (Notification "Use browser local storage to save Flash Buddy data?"
+                        Nothing
+                        Nothing
+                        RejectLocalStorage
+                        AcceptLocalStorage
+                    )
+
+            else
+                Nothing
+
+        maybeUpgradeServiceWorker =
+            if model.serviceWorker == Model.UpdateAvailable then
+                Just
+                    (Notification "Flash Buddy upgrade available. Refresh to upgrade?"
+                        (Just "Later")
+                        (Just "Upgrade now!")
+                        RejectServiceWorkerUpdate
+                        AcceptServiceWorkerUpdate
+                    )
 
             else
                 Nothing
 
         notifications =
-            [ maybeLocalStoreConsent ] |> List.filterMap identity
+            [ maybeLocalStoreConsent, maybeUpgradeServiceWorker ]
+                |> List.filterMap identity
     in
     if List.length notifications == 0 then
         text ""
@@ -394,8 +426,16 @@ viewNotifications model =
                     (\n ->
                         Html.li [ class "notification--info" ]
                             [ text n.title
-                            , Html.button [ onClick n.onReject ] [ text "Reject" ]
-                            , Html.button [ onClick n.onAccept ] [ text "Accept" ]
+                            , Html.button [ onClick n.onReject ]
+                                [ n.rejectLabel
+                                    |> Maybe.withDefault "Reject"
+                                    |> text
+                                ]
+                            , Html.button [ onClick n.onAccept ]
+                                [ n.acceptLabel
+                                    |> Maybe.withDefault "Accept"
+                                    |> text
+                                ]
                             ]
                     )
             )
